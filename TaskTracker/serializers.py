@@ -20,8 +20,14 @@ class CustomUserSerializer(serializers.Serializer):
         return user
 
     
-class TeamSerializer(serializers.Serializer):
-    pass
+class TeamSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Team
+        fields = ['teamid','name','team_leader']
+    
 
-class TaskSerializer(serializers.Serializer):
-    pass
+class TaskSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Task
+        fields = ['taskid','name','team','status']
+

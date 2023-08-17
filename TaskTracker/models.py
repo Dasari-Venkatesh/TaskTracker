@@ -1,4 +1,6 @@
 from django.db import models
+from django.utils import timezone
+
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 
 # Custom user model
@@ -18,23 +20,30 @@ class CustomUserManager(BaseUserManager):
         return self.create_user(email, password, **extra_fields)
 
 class CustomUser(AbstractBaseUser, PermissionsMixin):
+    firstname= models.CharField(max_length=100)
     userid = models.AutoField(primary_key=True)
     email = models.EmailField(unique=True)
     password = models.CharField(max_length=128)
-
-    ASSIGNED = 'Assigned'
-    COMPLETED = 'Completed'
+    # 1 = 'user'
+    # 2 = 'Team'
+    # 3 = 'Teammanager'
     
-    STATUSES = [
-        (ASSIGNED, 'Assigned'),
-        (COMPLETED, 'Completed')
+    
+    manager = 'manager'
+    teamLead='team leader'
+    teammember='team member'
+
+    ROLES = [
+        (manager, 'manager'),
+        (teamLead, 'team leader'),
+        (teammember,'team member'),
     ]
     
     
     is_staff = models.BooleanField(default=False)
     is_superuser = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
-    models.CharField(max_length=12, choices=ROLES, default= Team member)
+    role=models.CharField(max_length=15, choices=ROLES, default= teammember)
 
 
     USERNAME_FIELD = 'email'
@@ -48,6 +57,8 @@ class Team(models.Model):
     name = models.CharField(max_length=255)
     team_leader = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='led_teams')
 
+    def __str__(self):
+        return self.name
 # Team member model
 class TeamMember(models.Model):
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
@@ -55,15 +66,27 @@ class TeamMember(models.Model):
 
     class Meta:
         unique_together = ['user', 'team']
+    
+    def __str__(self):
+        return self.user.firstname
 
 # Task model
 class Task(models.Model):
+    CREATED = 'Created'
     ASSIGNED = 'Assigned'
-    COMPLETED = 'Completed'
+    Inprogress ='Inprogress'
+    UnderReview = 'Under Review'
+    Done = 'Done'
+
+    
+    
     
     STATUSES = [
-        (ASSIGNED, 'Assigned'),
-        (COMPLETED, 'Completed')
+        ("CREATED",'Completed'),
+        ("ASSIGNED", 'Assigned'),
+        ("Inprogress", 'In progress'),
+        ("UnderReview",'Under Review'),
+        ("Done",'Done'),
     ]
     
     taskid = models.AutoField(primary_key=True)
@@ -73,10 +96,28 @@ class Task(models.Model):
     started_at = models.DateTimeField(auto_now_add=True)
     completed_at = models.DateTimeField(null=True, blank=True)
 
+    @property
+    def is_completed(self):
+        return self.status == "Done"
+    
+    def save(self, *args, **kwargs):
+        if self.status == "Done" and not self.completed_at:
+            self.completed_at = timezone.now()
+        elif self.status != "Done" :
+            self.completed_at = None
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.name
+
 # Task assignment model
 class TaskAssignment(models.Model):
     task = models.ForeignKey(Task, on_delete=models.CASCADE)
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
     
     class Meta:
-        unique_together = ['task', 'user']
+    
+      unique_together = ['task', 'user']
+
+    def __str__(self):
+        return self.task.name

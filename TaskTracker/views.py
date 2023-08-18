@@ -1,10 +1,18 @@
-from .models import CustomUser,Task,Team
-from .serializers import CustomUserSerializer,TaskSerializer,TeamSerializer
+from .models import (CustomUser,
+                     Task,
+                     Team,
+    )
+from .serializers import (CustomUserSerializer,
+                          TaskSerializer,
+                          TeamSerializer
+    )
 from django.http import Http404
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+from django.shortcuts import get_object_or_404
 # Create your views here.
+
 
 class user_list(APIView):
     
@@ -14,11 +22,13 @@ class user_list(APIView):
         serializer=CustomUserSerializer(users,many = True)
         return Response(serializer.data)
     
-    def post(self, request,format = None):
+    def post(self, request):
         serializer = CustomUserSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
+            # print(request.data)
             return Response(serializer.data,status=status.HTTP_201_CREATED)
+        return Response(serializer.errors)
     
 class user_view(APIView):
     def get_object(self,pk):
@@ -36,6 +46,14 @@ class task_list(APIView):
         tasks = Task.objects.all()
         serializer=TaskSerializer(tasks,many=True)
         return Response(serializer.data)
+    
+    def post(self, request):
+        serializer = TaskSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            # print(request.data)
+            return Response(serializer.data,status=status.HTTP_201_CREATED)
+        return Response(serializer.errors)
 
 class task_view(APIView):
     def get_object(self,pk):
@@ -49,10 +67,27 @@ class task_view(APIView):
         return Response(serializer.data)
     
 class team_list(APIView):
-    def get(self,request,format = None):
+    def get(self,request):
         teams = Team.objects.all()
         serializer=TeamSerializer(teams,many=True)
         return Response(serializer.data)
+    
+    
+    # {   "name":"Scripting",
+    #       "team_leader":"das"
+    # }
+    def post(self, request):
+        data=request.data
+        team_lead_name=data['team_leader']
+        team_leader=get_object_or_404(CustomUser,firstname=team_lead_name,role='teamLead')
+        serializer = TeamSerializer(data=data)
+        # print(request.data)
+        if serializer.is_valid():
+            serializer.save(team_leader=team_leader)
+            # print(request.data)
+            return Response(serializer.data,status=status.HTTP_201_CREATED)
+        return Response(serializer.errors)
+
 class team_view(APIView):
     def get_object(self,pk):
         try:
@@ -60,8 +95,8 @@ class team_view(APIView):
         except Team.DoesNotExist:
             raise Http404
     def get(self,request,pk):
-        task=self.get_object(pk)
-        serializer=TeamSerializer(task)
+        team=self.get_object(pk)
+        serializer=TeamSerializer(team)
         return Response(serializer.data)
 
 """

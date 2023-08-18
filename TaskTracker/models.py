@@ -3,6 +3,10 @@ from django.utils import timezone
 
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 
+
+    
+
+
 # Custom user model
 class CustomUserManager(BaseUserManager):
     def create_user(self, email, password=None, **extra_fields):
@@ -20,34 +24,28 @@ class CustomUserManager(BaseUserManager):
         return self.create_user(email, password, **extra_fields)
 
 class CustomUser(AbstractBaseUser, PermissionsMixin):
-    firstname= models.CharField(max_length=100)
+
+    ROLES = [
+        ('manager', 'manager'),
+        ('teamLead', 'team leader'),
+        ('teammember','team member'),
+    ]
+     
     userid = models.AutoField(primary_key=True)
     email = models.EmailField(unique=True)
     password = models.CharField(max_length=128)
-    # 1 = 'user'
-    # 2 = 'Team'
-    # 3 = 'Teammanager'
-    
-    
-    manager = 'manager'
-    teamLead='team leader'
-    teammember='team member'
-
-    ROLES = [
-        (manager, 'manager'),
-        (teamLead, 'team leader'),
-        (teammember,'team member'),
-    ]
-    
+    firstname= models.CharField(max_length=100)
+    role=models.CharField(max_length=15, choices=ROLES, default= 'teammember')
     
     is_staff = models.BooleanField(default=False)
     is_superuser = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
-    role=models.CharField(max_length=15, choices=ROLES, default= teammember)
+
+    
 
 
     USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = []
+    REQUIRED_FIELDS = ['role','firstname']
     
     objects = CustomUserManager()
 
@@ -57,6 +55,8 @@ class Team(models.Model):
     name = models.CharField(max_length=255)
     team_leader = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='led_teams')
 
+    class Meta:
+        unique_together = ['name', 'team_leader']
     def __str__(self):
         return self.name
 # Team member model

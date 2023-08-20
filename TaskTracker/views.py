@@ -9,12 +9,18 @@ from .serializers import (CustomUserSerializer,
 from django.http import Http404
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework import status
+from rest_framework import status,generics
 from django.shortcuts import get_object_or_404
 # Create your views here.
 
 
-class user_list(APIView):
+
+class CustomUserListCreateView(generics.ListCreateAPIView):
+    queryset = CustomUser.objects.all()
+    serializer_class = CustomUserSerializer
+
+
+"""class user_list(APIView):
     
     # List all users, or create new user
     def get(self,request,format = None):
@@ -28,9 +34,13 @@ class user_list(APIView):
             serializer.save()
             # print(request.data)
             return Response(serializer.data,status=status.HTTP_201_CREATED)
-        return Response(serializer.errors)
-    
-class user_view(APIView):
+        return Response(serializer.errors)"""
+
+class CustomUserRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = CustomUser.objects.all()
+    serializer_class = CustomUserSerializer
+
+"""class user_view(APIView):
     def get_object(self,pk):
         try:
             return CustomUser.objects.get(pk=pk)
@@ -63,7 +73,8 @@ class user_view(APIView):
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
+"""
+
 class task_list(APIView):
     def get(self,request,format = None):
         tasks = Task.objects.all()

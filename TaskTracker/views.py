@@ -41,6 +41,29 @@ class user_view(APIView):
         serializer=CustomUserSerializer(user)
         return Response(serializer.data)
     
+    # Handle user update (HTTP PUT request)
+    def put(self, request, pk, format=None):
+        user = self.get_object(pk)
+        serializer = CustomUserSerializer(user, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    # Handle user deletion (HTTP DELETE request)
+    def delete(self, request, pk, format=None):
+        user = self.get_object(pk)
+        user.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+    
+    def patch(self, request, pk, format=None):
+        user = self.get_object(pk)
+        serializer = CustomUserSerializer(user, data=request.data, partial=True)  # Note the `partial=True` here
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
 class task_list(APIView):
     def get(self,request,format = None):
         tasks = Task.objects.all()
@@ -78,8 +101,11 @@ class team_list(APIView):
     # }
     def post(self, request):
         data=request.data
+        # print(data)
         team_lead_name=data['team_leader']
-        team_leader=get_object_or_404(CustomUser,firstname=team_lead_name,role='teamLead')
+        # print(team_lead_name)
+        team_leader=get_object_or_404(CustomUser,firstname=team_lead_name,role='team leader')
+        print("note here:",team_leader)
         serializer = TeamSerializer(data=data)
         # print(request.data)
         if serializer.is_valid():

@@ -1,5 +1,4 @@
 from rest_framework import serializers
-from django.shortcuts import get_object_or_404
 from .models import Team,TeamMember,CustomUser,TaskAssignment,Task
 
 class CustomUserSerializer(serializers.Serializer):
@@ -11,10 +10,13 @@ class CustomUserSerializer(serializers.Serializer):
 
     
     def validate(self, data):
-        email=data['email']
-        if CustomUser.objects.filter(email__iexact=email).exists():
-            raise serializers.ValidationError("Email exists.")
-        return data
+        if("email" in data):
+            email=data['email']
+            if CustomUser.objects.filter(email__iexact=email).exists():
+                raise serializers.ValidationError("Email exists.")
+            return data
+        else:
+            return data
     
     def create(self, validated_data):
         user = CustomUser.objects.create(email=validated_data['email'],
@@ -23,6 +25,16 @@ class CustomUserSerializer(serializers.Serializer):
         user.set_password(validated_data['password'])
         user.save()
         return validated_data
+    
+    def update(self, instance, validated_data):
+        instance.email = validated_data.get('email', instance.email)
+        instance.firstname = validated_data.get('firstname', instance.firstname)
+        instance.role = validated_data.get('role', instance.role)
+        password = validated_data.get('password', None)
+        if password:
+            instance.set_password(password)
+        instance.save()
+        return instance
 
     
 class TeamSerializer(serializers.ModelSerializer):
@@ -59,6 +71,7 @@ class TeamSerializer(serializers.ModelSerializer):
         return leader
     
 class TeamMemberSerializer(serializers.ModelSerializer):
+    
     pass
 
 class TaskSerializer(serializers.ModelSerializer):

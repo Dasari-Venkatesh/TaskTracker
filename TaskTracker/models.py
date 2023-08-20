@@ -27,14 +27,14 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
 
     ROLES = [
         ('manager', 'manager'),
-        ('teamLead', 'team leader'),
-        ('teammember','team member'),
+        ('team leader', 'team leader'),
+        ('team member','team member'),
     ]
      
     userid = models.AutoField(primary_key=True)
     email = models.EmailField(unique=True)
     password = models.CharField(max_length=128)
-    firstname= models.CharField(max_length=100)
+    firstname= models.CharField(max_length=100,unique=True)
     role=models.CharField(max_length=15, choices=ROLES, default= 'teammember')
     
     is_staff = models.BooleanField(default=False)
@@ -72,15 +72,7 @@ class TeamMember(models.Model):
 
 # Task model
 class Task(models.Model):
-    CREATED = 'Created'
-    ASSIGNED = 'Assigned'
-    Inprogress ='Inprogress'
-    UnderReview = 'Under Review'
-    Done = 'Done'
-
-    
-    
-    
+   
     STATUSES = [
         ("CREATED",'Completed'),
         ("ASSIGNED", 'Assigned'),
@@ -90,9 +82,9 @@ class Task(models.Model):
     ]
     
     taskid = models.AutoField(primary_key=True)
-    name = models.CharField(max_length=255)
+    name = models.CharField(max_length=255,unique=True)
     team = models.ForeignKey(Team, on_delete=models.CASCADE, related_name='tasks')
-    status = models.CharField(max_length=12, choices=STATUSES, default=ASSIGNED)
+    status = models.CharField(max_length=12, choices=STATUSES, default="ASSIGNED")
     started_at = models.DateTimeField(auto_now_add=True)
     completed_at = models.DateTimeField(null=True, blank=True)
 
